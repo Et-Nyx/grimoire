@@ -36,4 +36,4 @@ META-INF/
 *.log
 
 # Obsidian
-.
+obsidian/ 

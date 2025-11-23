@@ -34,11 +34,3 @@ Thumbs.db
 # Temporary
 META-INF/
 *.log
-
-# LLM/AI artifacts
-.agent/
-.gemini/
-.cursor/
-.aider*
-*.prompt
-*_prompt.txt

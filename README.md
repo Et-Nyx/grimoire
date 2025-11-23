@@ -12,12 +12,6 @@ Em outro terminal:
 nix-shell --run "java -jar target/grimoire-cli-0.0.1-SNAPSHOT-client.jar"
 ```
 
-Ou diretamente (sem nix-shell):
-```bash
-java -jar target/grimoire-cli-0.0.1-SNAPSHOT-client.jar
-```
-
-
 ## Funcionalidades Implementadas
 
 ### Servidor

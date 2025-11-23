@@ -34,3 +34,6 @@ Thumbs.db
 # Temporary
 META-INF/
 *.log
+
+# Obsidian
+.

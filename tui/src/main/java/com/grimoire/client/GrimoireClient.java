@@ -6,7 +6,8 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 import com.grimoire.client.service.ApiClient;
-import com.grimoire.client.ui.MainMenuScreen;
+import com.grimoire.client.ui.LoginScreen;
+import com.grimoire.client.ui.RootDashboardScreen;
 
 public class GrimoireClient {
     
@@ -31,8 +32,11 @@ public class GrimoireClient {
             
             screen.startScreen();
             
-            MainMenuScreen mainMenu = new MainMenuScreen(screen, apiClient);
-            mainMenu.show();
+            LoginScreen loginScreen = new LoginScreen(screen, apiClient);
+            if (loginScreen.show()) {
+                RootDashboardScreen rootDashboard = new RootDashboardScreen(screen, apiClient);
+                rootDashboard.show();
+            }
             
             screen.stopScreen();
             

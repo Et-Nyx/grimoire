@@ -45,6 +45,35 @@ public class CampaignController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/notes/{id}")
+    public ResponseEntity<Void> deleteNote(@PathVariable String id) {
+        try {
+            persistenceService.deleteNote(id);
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/notes")
+    public ResponseEntity<List<CampaignNote>> listNotes(@RequestParam(required = false) String campaignId) {
+        List<CampaignNote> allNotes = persistenceService.loadAllNotes();
+        
+        if (campaignId != null) {
+            try {
+                UUID cId = UUID.fromString(campaignId);
+                List<CampaignNote> filtered = allNotes.stream()
+                        .filter(n -> cId.equals(n.getCampaignId()))
+                        .collect(Collectors.toList());
+                return ResponseEntity.ok(filtered);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        
+        return ResponseEntity.ok(allNotes);
+    }
     @PostMapping
     public ResponseEntity<Campaign> createCampaign(@RequestBody Campaign campaign) {
         if (campaign.getId() == null) {

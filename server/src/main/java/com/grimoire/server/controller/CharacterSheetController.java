@@ -35,5 +35,22 @@ public class CharacterSheetController {
         }
     }
     
-    // TODO: Implement specific resource patching if needed, or rely on full update for now.
+    @GetMapping
+    public ResponseEntity<java.util.List<CharacterSheet>> listSheets(@RequestParam(required = false) String campaignId) {
+        java.util.List<CharacterSheet> allSheets = persistenceService.loadAllSheets();
+        
+        if (campaignId != null) {
+            try {
+                java.util.UUID cId = java.util.UUID.fromString(campaignId);
+                java.util.List<CharacterSheet> filtered = allSheets.stream()
+                        .filter(s -> cId.equals(s.getCampaignId()))
+                        .collect(java.util.stream.Collectors.toList());
+                return ResponseEntity.ok(filtered);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        
+        return ResponseEntity.ok(allSheets);
+    }
 }

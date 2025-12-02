@@ -59,6 +59,20 @@ public class ApiClient {
         return null;
     }
 
+    public List<CharacterSheet> listSheets(UUID campaignId) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/sheet?campaignId=" + campaignId))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), new TypeReference<List<CharacterSheet>>() {});
+        }
+        return List.of();
+    }
+
     // Auth
     public User login(String username, String password) throws Exception {
         User loginRequest = new User(username, password);
@@ -99,6 +113,24 @@ public class ApiClient {
 
     public User getCurrentUser() {
         return currentUser;
+    }
+
+    public User getUser(UUID id) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/auth/user/" + id))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), User.class);
+        }
+        return null;
+    }
+
+    public void logout() {
+        this.currentUser = null;
     }
 
     // Campaign
@@ -152,5 +184,45 @@ public class ApiClient {
             return objectMapper.readValue(response.body(), Campaign.class);
         }
         return null;
+    }
+
+    public com.grimoire.common.model.CampaignNote saveNote(com.grimoire.common.model.CampaignNote note) throws Exception {
+        String json = objectMapper.writeValueAsString(note);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/campaign/notes"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), com.grimoire.common.model.CampaignNote.class);
+        }
+        return null;
+    }
+
+    public void deleteNote(String noteId) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/campaign/notes/" + noteId))
+                .DELETE()
+                .build();
+
+        httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+    }
+
+    public List<com.grimoire.common.model.CampaignNote> listNotes(String campaignId) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(baseUrl + "/campaign/notes?campaignId=" + campaignId))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            return objectMapper.readValue(response.body(), new TypeReference<List<com.grimoire.common.model.CampaignNote>>() {});
+        }
+        return List.of();
     }
 }

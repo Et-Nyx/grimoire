@@ -12,6 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 public class CharacterSheet {
     private String id;
+    private java.util.UUID campaignId;
+    private java.util.UUID playerId;
     
     // Header
     private String name;

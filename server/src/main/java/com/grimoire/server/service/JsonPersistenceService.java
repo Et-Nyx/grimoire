@@ -70,6 +70,42 @@ public class JsonPersistenceService {
         return Optional.empty();
     }
 
+    public void deleteNote(String id) throws IOException {
+        Files.deleteIfExists(Paths.get(DATA_DIR, "notes", id + ".json"));
+    }
+
+    public java.util.List<CharacterSheet> loadAllSheets() {
+        java.util.List<CharacterSheet> sheets = new java.util.ArrayList<>();
+        try {
+            File dir = Paths.get(DATA_DIR, "sheets").toFile();
+            File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
+            if (files != null) {
+                for (File file : files) {
+                    sheets.add(objectMapper.readValue(file, CharacterSheet.class));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return sheets;
+    }
+
+    public java.util.List<CampaignNote> loadAllNotes() {
+        java.util.List<CampaignNote> notes = new java.util.ArrayList<>();
+        try {
+            File dir = Paths.get(DATA_DIR, "notes").toFile();
+            File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
+            if (files != null) {
+                for (File file : files) {
+                    notes.add(objectMapper.readValue(file, CampaignNote.class));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return notes;
+    }
+
     // User Persistence
     public void saveUser(com.grimoire.common.model.User user) throws IOException {
         File file = Paths.get(DATA_DIR, "users", user.getId() + ".json").toFile();

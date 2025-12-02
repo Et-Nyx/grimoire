@@ -6,9 +6,6 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 import com.grimoire.client.service.ApiClient;
-import com.grimoire.client.ui.LoginScreen;
-import com.grimoire.client.ui.RootDashboardScreen;
-
 public class GrimoireClient {
     
     public static void main(String[] args) {
@@ -25,23 +22,19 @@ public class GrimoireClient {
             if (sttyPath != null) {
                 System.setProperty("com.googlecode.lanterna.terminal.UnixTerminal.sttyCommand", sttyPath);
             }
-            
-            DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
-            Terminal terminal = terminalFactory.createTerminal();
-            Screen screen = new TerminalScreen(terminal);
-            
-            screen.startScreen();
-            
-            LoginScreen loginScreen = new LoginScreen(screen, apiClient);
-            if (loginScreen.show()) {
-                RootDashboardScreen rootDashboard = new RootDashboardScreen(screen, apiClient);
-                rootDashboard.show();
+
+            // New Modular TUI
+            com.grimoire.client.tui.framework.TuiApp app = com.grimoire.client.tui.framework.TuiApp.getInstance();
+            try {
+                app.start();
+            } finally {
+                app.stop();
             }
             
-            screen.stopScreen();
-            
         } catch (Exception e) {
-            e.printStackTrace();
+            java.util.logging.Logger.getLogger(GrimoireClient.class.getName()).log(java.util.logging.Level.SEVERE, "Fatal error", e);
+            System.err.println("Application crashed: " + e.getMessage());
+            System.err.println("Check tui-debug.log for details.");
         }
     }
     

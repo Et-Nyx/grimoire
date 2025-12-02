@@ -54,4 +54,11 @@ public class AuthController {
         
         return ResponseEntity.status(401).build(); // Unauthorized
     }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<User> getUser(@PathVariable String id) {
+        return persistenceService.loadUser(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CampaignNote {
     private String id;
+    private java.util.UUID campaignId;
     private String author;
     private String content;
     private LocalDateTime timestamp;

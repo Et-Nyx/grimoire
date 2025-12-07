@@ -20,7 +20,6 @@ public class TuiApplication {
     private static final String DEFAULT_SERVER_URL = "http://localhost:8080";
     
     public static void main(String[] args) {
-        System.out.println("Inicializando interface TUI em modo texto (ANSI)...");
         
         // Configure terminal factory to force text mode
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
@@ -57,19 +56,18 @@ public class TuiApplication {
                 );
                 gui.addWindowAndWait(mainMenuWindow);
             } else {
-                System.out.println("Login cancelado pelo usuário.");
+                // User cancelled login - exit silently
             }
             
         } catch (IOException e) {
-            System.err.println("Erro ao inicializar a interface TUI:");
-            e.printStackTrace();
+            // Fatal error - exit with error code
             System.exit(1);
         } finally {
             if (screen != null) {
                 try {
                     screen.stopScreen();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // Ignore cleanup errors
                 }
             }
         }

@@ -20,13 +20,16 @@ public class SessionTimeline extends AbstractComponent<SessionTimeline> implemen
     
     static {
         try {
+            // Ensure .logs directory exists
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(".logs"));
             FileHandler fileHandler = new FileHandler(".logs/timeline-debug.log", true);
             fileHandler.setFormatter(new SimpleFormatter());
             LOGGER.addHandler(fileHandler);
             LOGGER.setUseParentHandlers(false);
-            LOGGER.setLevel(java.util.logging.Level.WARNING);
+            LOGGER.setLevel(java.util.logging.Level.OFF);  // Disable logging in production
         } catch (IOException e) {
-            System.err.println("Failed to setup logger: " + e.getMessage());
+            // Silently ignore - logging is optional
+            LOGGER.setLevel(java.util.logging.Level.OFF);
         }
     }
     

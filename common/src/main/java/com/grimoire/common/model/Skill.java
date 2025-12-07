@@ -1,26 +1,20 @@
 package com.grimoire.common.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Skill {
     private SkillType type;
     private String customName; // For "Ofício" skills - e.g., "Ofício(Ferreiro)"
-    private int trainingRanks; // Number of training ranks (each adds +2)
     private int others; // Bonus from equipment, effects, etc.
     private boolean isTrained;
     
-    public Skill(SkillType type) {
-        this.type = type;
-        this.customName = null;
-        this.trainingRanks = 0;
-        this.others = 0;
-        this.isTrained = false;
-    }
     
     public String getDisplayName() {
         if (type == SkillType.OFICIO && customName != null && !customName.isEmpty()) {
@@ -30,22 +24,40 @@ public class Skill {
     }
     
     /**
-     * Calculates the total skill value
-     * Total = 1/2 Level (rounded down) + Attribute Mod + Training + Others
+     * Calcula o valor total da perícia conforme T20 JdA.
+     * Fórmula: 1/2 Nível + Modificador de Atributo + Bônus de Treinamento + Outros - Penalidade de Armadura
+     * 
+     * @param characterLevel Nível do personagem
+     * @param attributes Atributos do personagem (valores JÁ SÃO os modificadores)
+     * @param armorPenalty Penalidade de armadura (aplicada apenas se a perícia sofre penalidade)
+     * @return Valor total da perícia
      */
-    public int calculateTotal(int characterLevel, Attributes attributes) {
+    public int calculateTotal(int characterLevel, Attributes attributes, int armorPenalty) {
         int halfLevel = characterLevel / 2;
         int attrMod = getAttributeModifier(attributes);
-        int training = isTrained ? (trainingRanks * 2) : 0;
+        int training = getTrainingBonus(characterLevel);
+        int acp = type.hasArmorPenalty() ? armorPenalty : 0;
         
-        return halfLevel + attrMod + training + others;
+        return halfLevel + attrMod + training + others - acp;
     }
     
     /**
-     * Gets the attribute modifier based on the skill's associated attribute
+     * Calcula o valor total da perícia sem penalidade de armadura (compatibilidade).
+     */
+    public int calculateTotal(int characterLevel, Attributes attributes) {
+        return calculateTotal(characterLevel, attributes, 0);
+    }
+    
+    /**
+     * Obtém o modificador de atributo da perícia.
+     * T20 JdA: O valor do atributo JÁ É o modificador (armazenado diretamente como -2 a +5).
+     * Não há conversão como em D&D!
      */
     private int getAttributeModifier(Attributes attributes) {
-        int attributeValue = switch (type.getAttribute()) {
+        if (attributes == null || type == null) return 0;
+        
+        // T20 JdA: O atributo JÁ É o modificador (armazenado diretamente)
+        return switch (type.getAttribute()) {
             case "FOR" -> attributes.getStrength();
             case "DES" -> attributes.getDexterity();
             case "CON" -> attributes.getConstitution();
@@ -54,9 +66,20 @@ public class Skill {
             case "CAR" -> attributes.getCharisma();
             default -> 0;
         };
-        
-        // D&D/T20 attribute modifier formula: (value - 10) / 2
-        return (attributeValue - 10) / 2;
+    }
+    
+    /**
+     * Calcula o bônus de treinamento baseado no patamar do personagem.
+     * T20 JdA:
+     * - Níveis 1-6: +2
+     * - Níveis 7-14: +4
+     * - Níveis 15+: +6
+     */
+    public int getTrainingBonus(int level) {
+        if (!isTrained) return 0;
+        if (level >= 15) return 6;
+        if (level >= 7) return 4;
+        return 2;
     }
     
     public int getHalfLevel(int characterLevel) {
@@ -67,7 +90,13 @@ public class Skill {
         return getAttributeModifier(attributes);
     }
     
+    /**
+     * @deprecated Use {@link #getTrainingBonus(int)} com o nível do personagem
+     */
+    @Deprecated
     public int getTraining() {
-        return isTrained ? (trainingRanks * 2) : 0;
+        // Mantido para compatibilidade, assume nível 1
+        return isTrained ? 2 : 0;
     }
 }
+

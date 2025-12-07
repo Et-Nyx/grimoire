@@ -34,9 +34,23 @@ public class CharacterSheetController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CharacterSheet> updateSheet(@PathVariable String id, @RequestBody CharacterSheet sheet) {
+        try {
+            // Ensure ID matches
+            if (!id.equals(sheet.getId())) {
+                return ResponseEntity.badRequest().build();
+            }
+            persistenceService.saveCharacterSheet(sheet);
+            return ResponseEntity.ok(sheet);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     
     @GetMapping
-    public ResponseEntity<java.util.List<CharacterSheet>> listSheets(@RequestParam(required = false) String campaignId) {
+    public ResponseEntity<java.util.List<CharacterSheet>> listSheets(@RequestParam(required = false) String campaignId, @RequestParam(required = false) String playerId) {
         java.util.List<CharacterSheet> allSheets = persistenceService.loadAllSheets();
         
         if (campaignId != null) {
@@ -44,6 +58,18 @@ public class CharacterSheetController {
                 java.util.UUID cId = java.util.UUID.fromString(campaignId);
                 java.util.List<CharacterSheet> filtered = allSheets.stream()
                         .filter(s -> cId.equals(s.getCampaignId()))
+                        .collect(java.util.stream.Collectors.toList());
+                return ResponseEntity.ok(filtered);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        
+        if (playerId != null) {
+            try {
+                java.util.UUID pId = java.util.UUID.fromString(playerId);
+                java.util.List<CharacterSheet> filtered = allSheets.stream()
+                        .filter(s -> pId.equals(s.getPlayerId()))
                         .collect(java.util.stream.Collectors.toList());
                 return ResponseEntity.ok(filtered);
             } catch (IllegalArgumentException e) {

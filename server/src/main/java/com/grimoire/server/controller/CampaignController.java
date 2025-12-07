@@ -1,7 +1,6 @@
 package com.grimoire.server.controller;
 
 import com.grimoire.common.model.Campaign;
-import com.grimoire.common.model.CampaignNote;
 import com.grimoire.server.service.JsonPersistenceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,58 +21,6 @@ public class CampaignController {
         this.persistenceService = persistenceService;
     }
 
-    @PostMapping("/notes")
-    public ResponseEntity<CampaignNote> addNote(@RequestBody CampaignNote note) {
-        if (note.getId() == null) {
-            note.setId(UUID.randomUUID().toString());
-        }
-        if (note.getTimestamp() == null) {
-            note.setTimestamp(LocalDateTime.now());
-        }
-        
-        try {
-            persistenceService.saveNote(note);
-            return ResponseEntity.ok(note);
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @GetMapping("/notes/{id}")
-    public ResponseEntity<CampaignNote> getNote(@PathVariable String id) {
-        return persistenceService.loadNote(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/notes/{id}")
-    public ResponseEntity<Void> deleteNote(@PathVariable String id) {
-        try {
-            persistenceService.deleteNote(id);
-            return ResponseEntity.ok().build();
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @GetMapping("/notes")
-    public ResponseEntity<List<CampaignNote>> listNotes(@RequestParam(required = false) String campaignId) {
-        List<CampaignNote> allNotes = persistenceService.loadAllNotes();
-        
-        if (campaignId != null) {
-            try {
-                UUID cId = UUID.fromString(campaignId);
-                List<CampaignNote> filtered = allNotes.stream()
-                        .filter(n -> cId.equals(n.getCampaignId()))
-                        .collect(Collectors.toList());
-                return ResponseEntity.ok(filtered);
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().build();
-            }
-        }
-        
-        return ResponseEntity.ok(allNotes);
-    }
     @PostMapping
     public ResponseEntity<Campaign> createCampaign(@RequestBody Campaign campaign) {
         if (campaign.getId() == null) {
@@ -108,16 +55,45 @@ public class CampaignController {
 
     @PostMapping("/{id}/join")
     public ResponseEntity<Campaign> joinCampaign(@PathVariable String id, @RequestParam String userId) {
+        com.grimoire.server.util.ServerLogger.logInfo("Received join request for campaign: " + id + ", user: " + userId);
         try {
             UUID userUuid = UUID.fromString(userId);
             return persistenceService.loadCampaign(id)
                     .map(campaign -> {
+                        com.grimoire.server.util.ServerLogger.logInfo("Campaign found: " + campaign.getName());
                         campaign.addPlayer(userUuid);
                         try {
                             persistenceService.saveCampaign(campaign);
+                            com.grimoire.server.util.ServerLogger.logInfo("Campaign saved with new player.");
                             return ResponseEntity.ok(campaign);
                         } catch (IOException e) {
+                            com.grimoire.server.util.ServerLogger.logError("Error saving campaign", e);
                             return ResponseEntity.internalServerError().<Campaign>build();
+                        }
+                    })
+                    .orElseGet(() -> {
+                        com.grimoire.server.util.ServerLogger.logInfo("Campaign not found: " + id);
+                        return ResponseEntity.notFound().build();
+                    });
+        } catch (IllegalArgumentException e) {
+            com.grimoire.server.util.ServerLogger.logError("Invalid UUID format", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCampaign(@PathVariable String id, @RequestParam String userId) {
+        try {
+            UUID userUuid = UUID.fromString(userId);
+            return persistenceService.loadCampaign(id)
+                    .map(campaign -> {
+                        if (!campaign.getOwnerId().equals(userUuid)) {
+                            return ResponseEntity.status(403).<Void>build();
+                        }
+                        try {
+                            persistenceService.deleteCampaign(id);
+                            return ResponseEntity.ok().<Void>build();
+                        } catch (IOException e) {
+                            return ResponseEntity.internalServerError().<Void>build();
                         }
                     })
                     .orElse(ResponseEntity.notFound().build());

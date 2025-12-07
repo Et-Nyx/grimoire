@@ -22,7 +22,7 @@ pom.xml.old
 data/
 
 # References (development docs)
-references/
+.references/
 
 # Nix
 result

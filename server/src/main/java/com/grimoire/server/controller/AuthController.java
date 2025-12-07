@@ -32,8 +32,12 @@ public class AuthController {
         try {
             // Ensure ID is generated
             if (user.getId() == null) {
-                user = new User(user.getUsername(), user.getPassword());
+                user = User.builder()
+                        .username(user.getUsername())
+                        .password(user.getPassword())
+                        .build();
             }
+            // TODO: Implement password hashing before saving (e.g., BCrypt)
             persistenceService.saveUser(user);
             return ResponseEntity.ok(user);
         } catch (IOException e) {
@@ -47,6 +51,7 @@ public class AuthController {
         
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            // TODO: Implement password verification with hash comparison (e.g., BCrypt.checkpw())
             if (user.getPassword().equals(loginRequest.getPassword())) {
                 return ResponseEntity.ok(user);
             }
@@ -60,5 +65,28 @@ public class AuthController {
         return persistenceService.loadUser(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/user/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable String id, @RequestBody User user) {
+        if (!id.equals(user.getId().toString())) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            persistenceService.saveUser(user);
+            return ResponseEntity.ok(user);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+        try {
+            persistenceService.deleteUser(id);
+            return ResponseEntity.ok().build();
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

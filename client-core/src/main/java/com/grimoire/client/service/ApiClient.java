@@ -75,7 +75,10 @@ public class ApiClient {
 
     // Auth
     public User login(String username, String password) throws Exception {
-        User loginRequest = new User(username, password);
+        User loginRequest = User.builder()
+                .username(username)
+                .password(password)
+                .build();
         String json = objectMapper.writeValueAsString(loginRequest);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -94,7 +97,10 @@ public class ApiClient {
     }
 
     public User register(String username, String password) throws Exception {
-        User registerRequest = new User(username, password);
+        User registerRequest = User.builder()
+                .username(username)
+                .password(password)
+                .build();
         String json = objectMapper.writeValueAsString(registerRequest);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -153,7 +159,11 @@ public class ApiClient {
     public Campaign createCampaign(String name, String description) throws Exception {
         if (currentUser == null) throw new IllegalStateException("Not logged in");
 
-        Campaign campaign = new Campaign(name, description, currentUser.getId());
+        Campaign campaign = Campaign.builder()
+                .name(name)
+                .description(description)
+                .ownerId(currentUser.getId())
+                .build();
         String json = objectMapper.writeValueAsString(campaign);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -186,11 +196,11 @@ public class ApiClient {
         return null;
     }
 
-    public com.grimoire.common.model.CampaignNote saveNote(com.grimoire.common.model.CampaignNote note) throws Exception {
+    public com.grimoire.common.model.SessionNote saveNote(String sessionId, com.grimoire.common.model.SessionNote note) throws Exception {
         String json = objectMapper.writeValueAsString(note);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/campaign/notes"))
+                .uri(URI.create(baseUrl + "/session/" + sessionId + "/notes"))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
@@ -198,30 +208,30 @@ public class ApiClient {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            return objectMapper.readValue(response.body(), com.grimoire.common.model.CampaignNote.class);
+            return objectMapper.readValue(response.body(), com.grimoire.common.model.SessionNote.class);
         }
         return null;
     }
 
     public void deleteNote(String noteId) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/campaign/notes/" + noteId))
+                .uri(URI.create(baseUrl + "/session/notes/" + noteId))
                 .DELETE()
                 .build();
 
         httpClient.send(request, HttpResponse.BodyHandlers.discarding());
     }
 
-    public List<com.grimoire.common.model.CampaignNote> listNotes(String campaignId) throws Exception {
+    public List<com.grimoire.common.model.SessionNote> listNotes(String sessionId) throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/campaign/notes?campaignId=" + campaignId))
+                .uri(URI.create(baseUrl + "/session/" + sessionId + "/notes"))
                 .GET()
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            return objectMapper.readValue(response.body(), new TypeReference<List<com.grimoire.common.model.CampaignNote>>() {});
+            return objectMapper.readValue(response.body(), new TypeReference<List<com.grimoire.common.model.SessionNote>>() {});
         }
         return List.of();
     }

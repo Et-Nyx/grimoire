@@ -124,3 +124,6 @@ Os dados sao salvos localmente na pasta `data/`:
 - `data/sessions/`: Sessoes de jogo.
 - `data/sheets/`: Fichas de personagens.
 - `data/notes/`: Notas de campanha.
+
+## Playlist do Projeto
+- https://youtube.com/playlist?list=PLbdN4-jGdK789-oqPXjapxPplI8wksL2j&si=3_CUAZk_r-yDhhi3
